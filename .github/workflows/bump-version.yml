@@ -31,9 +31,8 @@ jobs:
     #   - name: Update Polars CLI version
     #     run: cargo set-version ${{ steps.draft.outputs.tag_name }}
 
-
       - name: Do something
-        run: touch hello.txt
+        run: echo 'hello world' > hello.txt
 
       - name: Commit to release branch
         uses: EndBug/add-and-commit@v9
