@@ -44,28 +44,14 @@ jobs:
       - name: Commit to release branch
         env:
           GH_TOKEN: ${{ secrets.DEPLOY_PAT }}
+          BODY: |
+            #### Changes
+            * Bump Polars CLI version to ${{ steps.draft.outputs.version }}
+            * Update Polars to the latest commit available in the main branch
+            * Update other dependencies to their latest non-breaking versions\n
         run: >
           gh pr create
           --head 'release/${{ steps.draft.outputs.tag_name }}'
           --base main
           --title 'build: Set version to ${{ steps.draft.outputs.tag_name }} and update dependencies'
-          --body '#### Changes\n\n
-          * Bump Polars CLI version to ${{ steps.draft.outputs.version }}\n
-          * Update Polars to the latest commit available in the main branch\n
-          * Update other dependencies to their latest non-breaking versions\n'
-
-    #   - name: Create pull request
-    #     uses: peter-evans/create-pull-request@v5
-    #     env:
-    #       branch: 'release/${{ steps.draft.outputs.tag_name }}'
-    #     with:
-    #       token: ${{ secrets.DEPLOY_PAT }}
-    #       branch: release/0.3.1
-    #       base: main
-    #       title: 'build: Set version to ${{ steps.draft.outputs.tag_name }} and update dependencies'
-    #       body: |
-    #         #### Changes
-
-    #         * Bump Polars CLI version to ${{ steps.draft.outputs.version }}
-    #         * Update Polars to the latest commit available in the main branch
-    #         * Update other dependencies to their latest non-breaking versions
+          --body "$BODY"
