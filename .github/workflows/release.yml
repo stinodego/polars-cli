@@ -1,0 +1,53 @@
+# name: Release
+
+# on:
+#   workflow_dispatch:
+
+# permissions:
+#   contents: write
+#   pull-requests: read
+
+# jobs:
+#   draft:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       version: ${{ steps.draft.outputs.tag_name }}
+#       upload_url: ${{ steps.draft.outputs.upload_url }}
+#     steps:
+#       - name: Draft release
+#         id: draft
+#         uses: release-drafter/release-drafter@v5
+#         with:
+#           config-name: release-drafter.yml
+#           disable-autolabeler: true
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#   compile-binaries:
+#     needs: bump-versions
+#     runs-on: ${{ matrix.os }}
+#     strategy:
+#       matrix:
+#         build: [linux] #, linux-arm, macos, win-msvc, win-gnu, win32-msvc]
+#         include:
+#           - build: linux
+#             os: ubuntu-latest
+#             rust: nightly
+#             target: x86_64-unknown-linux-musl
+#     steps:
+#       - uses: actions/checkout@v3
+
+#       - name: Install cargo-edit
+#         run: cargo install cargo-edit --no-default-features --features set-version
+
+#       - name: Update dependency versions
+#         run: cargo update
+
+#       - name: Update Polars CLI version
+#         run: cargo set-version ${{ needs.draft.outputs.version }}
+
+#       - name: Commit to main
+#         uses: EndBug/add-and-commit@v9
+#         with:
+#           message: 'build: Set version to ${{ needs.draft.outputs.version }} and update dependencies'
+#           default_author: github_actions
