@@ -22,14 +22,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install cargo-edit
-        run: cargo install cargo-edit --no-default-features --features set-version
+    #   - name: Install cargo-edit
+    #     run: cargo install cargo-edit --no-default-features --features set-version
 
-      - name: Update dependency versions
-        run: cargo update
+    #   - name: Update dependency versions
+    #     run: cargo update
 
-      - name: Update Polars CLI version
-        run: cargo set-version ${{ steps.draft.outputs.tag_name }}
+    #   - name: Update Polars CLI version
+    #     run: cargo set-version ${{ steps.draft.outputs.tag_name }}
+
+
+      - name: Do something
+        run: touch hello.txt
 
       - name: Commit to release branch
         uses: EndBug/add-and-commit@v9
@@ -45,6 +49,7 @@ jobs:
         with:
           token: ${{ secrets.DEPLOY_PAT }}
           branch: release/0.3.1
+          base: main
           title: 'build: Set version to ${{ steps.draft.outputs.tag_name }} and update dependencies'
           body: |
             #### Changes
