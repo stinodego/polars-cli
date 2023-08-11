@@ -31,11 +31,20 @@ jobs:
       - name: Update Polars CLI version
         run: cargo set-version ${{ steps.draft.outputs.tag_name }}
 
+      - name: Commit to release branch
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: 'build: Set version to ${{ steps.draft.outputs.tag_name }} and update dependencies'
+          default_author: github_actions
+          new_branch: release/${{ steps.draft.outputs.tag_name }}
+
       - name: Create pull request
         uses: peter-evans/create-pull-request@v5
+        env:
+          tag: '${{ steps.draft.outputs.tag_name }}'
         with:
           token: ${{ secrets.DEPLOY_PAT }}
-          branch: 'release/${{ steps.draft.outputs.version }}'
+          branch: release/0.3.1
           title: 'build: Set version to ${{ steps.draft.outputs.tag_name }} and update dependencies'
           body: |
             #### Changes
