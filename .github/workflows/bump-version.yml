@@ -51,6 +51,6 @@ jobs:
           --base main \
           --title 'build: Set version to ${{ steps.draft.outputs.tag_name }} and update dependencies' \
           --body '#### Changes
-          * Bump Polars CLI version to ${{ steps.draft.outputs.version }}
+          * Bump Polars CLI version to ${{ steps.draft.outputs.tag_name }}
           * Update Polars to the latest commit available in the main branch
           * Update other dependencies to their latest non-breaking versions'
