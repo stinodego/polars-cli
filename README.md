@@ -1,5 +1,7 @@
 # Polars CLI
 
+Hi.
+
 ## Installation
 
 Until binaries are available, the only way to install the Polars CLI is by building it from source:
