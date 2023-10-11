@@ -1,7 +1,6 @@
 name: Release
 
 on:
-  pull_request:
   workflow_dispatch:
     inputs:
       # Latest commit to include with the release. If omitted, use the latest commit on the main branch.
@@ -49,87 +48,88 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
 
-  # build-binaries:
-  #   needs: get-version
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os: [ubuntu-latest, macos-latest, windows-latest]
-  #       arch: [x86_64, aarch64]
-  #       exclude:
-  #         - os: windows-latest
-  #           arch: aarch64
-  #         - os: ubuntu-latest
-  #           arch: aarch64
+  build-binaries:
+    needs: get-version
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        arch: [x86_64, aarch64]
+        exclude:
+          - os: windows-latest
+            arch: aarch64
+          - os: ubuntu-latest
+            arch: aarch64
 
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         ref: ${{ inputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
 
-  #     - name: Set Rust target
-  #       id: target
-  #       run: |
-  #         if [ ${{ matrix.os == 'ubuntu-latest'}} = true ]; then
-  #           VENDOR_SYS=unknown-linux-gnu
-  #         elif [ ${{ matrix.os == 'macos-latest'}} = true ]; then
-  #           VENDOR_SYS=apple-darwin
-  #         else
-  #           VENDOR_SYS=pc-windows-msvc
-  #         fi
-  #         TARGET=${{ matrix.arch }}-$VENDOR_SYS
-  #         echo "target=$TARGET" >> $GITHUB_OUTPUT
+      - name: Set Rust target
+        id: target
+        run: |
+          if [ ${{ matrix.os == 'ubuntu-latest'}} = true ]; then
+            VENDOR_SYS=unknown-linux-gnu
+          elif [ ${{ matrix.os == 'macos-latest'}} = true ]; then
+            VENDOR_SYS=apple-darwin
+          else
+            VENDOR_SYS=pc-windows-msvc
+          fi
+          TARGET=${{ matrix.arch }}-$VENDOR_SYS
+          echo "target=$TARGET" >> $GITHUB_OUTPUT
 
-  #     - name: Add rustup target
-  #       run: rustup target add ${{ steps.target.outputs.target }}
+      - name: Add rustup target
+        run: rustup target add ${{ steps.target.outputs.target }}
 
-  #     - name: Set RUSTFLAGS for x86_64
-  #       if: matrix.arch == 'x86_64' && matrix.os != 'macos-latest'
-  #       run: echo "RUSTFLAGS=-C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+avx2,+fma,+bmi1,+bmi2,+lzcnt" >> $GITHUB_ENV
-  #     - name: Set RUSTFLAGS for x86_64 MacOS
-  #       if: matrix.arch == 'x86_64' && matrix.os == 'macos-latest'
-  #       run: echo "RUSTFLAGS=-C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma" >> $GITHUB_ENV
+      - name: Set RUSTFLAGS for x86_64
+        if: matrix.arch == 'x86_64' && matrix.os != 'macos-latest'
+        run: echo "RUSTFLAGS=-C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+avx2,+fma,+bmi1,+bmi2,+lzcnt" >> $GITHUB_ENV
+      - name: Set RUSTFLAGS for x86_64 MacOS
+        if: matrix.arch == 'x86_64' && matrix.os == 'macos-latest'
+        run: echo "RUSTFLAGS=-C target-feature=+sse3,+ssse3,+sse4.1,+sse4.2,+popcnt,+avx,+fma" >> $GITHUB_ENV
 
-  #     - name: Set jemalloc for aarch64 Linux
-  #       if: matrix.arch == 'aarch64' && matrix.os == 'ubuntu-latest'
-  #       run: echo "JEMALLOC_SYS_WITH_LG_PAGE=16" >> $GITHUB_ENV
+      - name: Set jemalloc for aarch64 Linux
+        if: matrix.arch == 'aarch64' && matrix.os == 'ubuntu-latest'
+        run: echo "JEMALLOC_SYS_WITH_LG_PAGE=16" >> $GITHUB_ENV
 
-  #     - name: Build binary
-  #       run: cargo build --target ${{ steps.target.outputs.target }}
+      - name: Build binary
+        run: cargo build --target ${{ steps.target.outputs.target }}
 
-  #     - name: Test binary
-  #       if: matrix.arch == 'x86_64'
-  #       run: ./target/${{ steps.target.outputs.target }}/debug/polars --version
+      - name: Test binary
+        if: matrix.arch == 'x86_64'
+        run: ./target/${{ steps.target.outputs.target }}/debug/polars --version
 
-  #     - name: Archive binary
-  #       id: archive
-  #       run: |
-  #         ARCHIVE_FILENAME=polars-cli-${{ needs.get-version.outputs.version }}-${{ steps.target.outputs.target }}.tar.gz
-  #         DIR=target/${{ steps.target.outputs.target }}/debug
-  #         tar czvf $ARCHIVE_FILENAME --directory=$DIR polars
-  #         echo "filename=$ARCHIVE_FILENAME" >> $GITHUB_OUTPUT
+      - name: Archive binary
+        id: archive
+        run: |
+          ARCHIVE_FILENAME=polars-cli-${{ needs.get-version.outputs.version }}-${{ steps.target.outputs.target }}.tar.gz
+          DIR=target/${{ steps.target.outputs.target }}/debug
+          tar czvf $ARCHIVE_FILENAME --directory=$DIR polars
+          echo "filename=$ARCHIVE_FILENAME" >> $GITHUB_OUTPUT
 
-  #     - name: Upload binary
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: binaries
-  #         path: ${{ steps.archive.outputs.filename }}
+      - name: Upload binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries
+          path: ${{ steps.archive.outputs.filename }}
 
-  # publish-to-crates-io:
-  #   # if: inputs.dry-run == false
-  #   needs: build-binaries
-  #   environment:
-  #     name: release
-  #     url: https://crates.io/crates/polars-cli
-  #   runs-on: ubuntu-latest
+  publish-to-crates-io:
+    if: inputs.dry-run == false
+    needs: build-binaries
+    environment:
+      name: release
+      url: https://crates.io/crates/polars-cli
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: Publish to crates.io
-  #       run: echo hello world
+    steps:
+      # TODO: Implement this
+      - name: Publish to crates.io
+        run: echo hello world
 
   publish-to-github:
-    needs: [get-version]  # publish-to-crates-io,
+    needs: [publish-to-crates-io, get-version]
     environment:
       name: release
       url: https://github.com/pola-rs/polars-cli/releases
@@ -139,20 +139,20 @@ jobs:
         with:
           ref: ${{ inputs.sha }}
 
-      # - name: Download binaries
-      #   uses: actions/download-artifact@v3
-      #   with:
-      #     name: binaries
-      #     path: binaries
+      - name: Download binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: binaries
+          path: binaries
 
       - name: Create and publish GitHub release
         id: github-release
         uses: release-drafter/release-drafter@v5
         with:
           config-name: release-drafter.yml
-          name: "${{ needs.get-version.outputs.version }}"
-          tag: "${{ needs.get-version.outputs.version }}"
-          version: "${{ needs.get-version.outputs.version }}"
+          name: ${{ needs.get-version.outputs.version }}
+          tag: ${{ needs.get-version.outputs.version }}
+          version: ${{ needs.get-version.outputs.version }}
           prerelease: ${{ needs.get-version.outputs.is-prerelease }}
           commitish: ${{ inputs.sha }}
           publish: true
