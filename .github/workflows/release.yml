@@ -146,6 +146,10 @@ jobs:
       url: https://github.com/pola-rs/polars-cli/releases
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
+
       - name: Download binaries
         uses: actions/download-artifact@v3
         with:
