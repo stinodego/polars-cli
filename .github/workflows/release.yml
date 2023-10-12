@@ -67,6 +67,13 @@ jobs:
         with:
           ref: ${{ inputs.sha }}
 
+      # Avoid potential out-of-memory errors
+      - name: Set swap space for Linux
+        if: matrix.os == 'ubuntu-latest'
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
       - name: Set Rust target
         id: target
         run: |
@@ -95,17 +102,17 @@ jobs:
         run: echo "JEMALLOC_SYS_WITH_LG_PAGE=16" >> $GITHUB_ENV
 
       - name: Build binary
-        run: cargo build --target ${{ steps.target.outputs.target }}
+        run: cargo build --target ${{ steps.target.outputs.target }} --release
 
       - name: Test binary
         if: matrix.arch == 'x86_64'
-        run: ./target/${{ steps.target.outputs.target }}/debug/polars --version
+        run: ./target/${{ steps.target.outputs.target }}/release/polars --version
 
       - name: Archive binary
         id: archive
         run: |
           ARCHIVE_FILENAME=polars-cli-${{ needs.get-version.outputs.version }}-${{ steps.target.outputs.target }}.tar.gz
-          DIR=target/${{ steps.target.outputs.target }}/debug
+          DIR=target/${{ steps.target.outputs.target }}/release
           tar czvf $ARCHIVE_FILENAME --directory=$DIR polars
           echo "filename=$ARCHIVE_FILENAME" >> $GITHUB_OUTPUT
 
@@ -126,7 +133,8 @@ jobs:
     steps:
       # TODO: Implement this
       - name: Publish to crates.io
-        run: echo hello world
+        if: false
+        run: cargo publish --dry-run
 
   publish-to-github:
     needs: [publish-to-crates-io, get-version]
