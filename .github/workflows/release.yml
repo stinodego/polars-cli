@@ -146,6 +146,9 @@ jobs:
       url: https://github.com/pola-rs/polars-cli/releases
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
       # - name: Download binaries
       #   uses: actions/download-artifact@v3
       #   with:
@@ -167,12 +170,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload binaries to GitHub release
-        run: gh release upload ${{ needs.get-version.outputs.version }} Cargo.* --clobber
+        run: gh release upload $VERSION $FILES --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.get-version.outputs.version }}
+          FILES: Cargo.*
 
       - name: Publish GitHub release
         if: inputs.dry-run == false
-        run: gh release edit ${{ needs.get-version.outputs.version }} --draft=false
+        run: gh release edit $VERSION --draft=false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.get-version.outputs.version }}
