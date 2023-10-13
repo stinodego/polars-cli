@@ -18,11 +18,11 @@ nu-ansi-term = { version = "0.49", optional = true }
 once_cell = { version = "1" }
 reedline = { version = "0.24" }
 serde = { version = "1", features = ["derive"] }
-sqlparser = { version = "0.38" }
+sqlparser = { version = "0.36" }
 tmp_env = { version = "0.1" }
 
 [dependencies.polars]
-version = ">=0.33.0"
+version = "0.32"
 features = ["lazy", "sql", "dtype-full", "serde-lazy"]
 
 [target.'cfg(target_os = "linux")'.dependencies]
